@@ -1,0 +1,12 @@
+# Binaries & build
+bin/
+*.exe
+*.test
+*.out
+coverage.out
+
+# Environment & IDE
+.env
+.DS_Store
+.idea/
+.vscode/
