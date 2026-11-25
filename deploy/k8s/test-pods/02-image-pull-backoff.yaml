@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-image-pull-backoff
+  namespace: default
+  labels:
+    app: k8s-advisor-test
+    scenario: image-pull-backoff
+spec:
+  restartPolicy: Always
+  containers:
+    - name: bad-image
+      image: registry.invalid/kavix/nonexistent-service:v999
+      resources:
+        requests:
+          memory: "16Mi"
+          cpu: "10m"
