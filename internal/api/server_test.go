@@ -71,4 +71,23 @@ func TestHealthzAndAnalyzeEndpoint(t *testing.T) {
 	if adv.Classification.IssueCategory != "scheduling_failure" {
 		t.Fatalf("expected scheduling_failure, got %s", adv.Classification.IssueCategory)
 	}
+
+	_ = store.SaveAdvisory(context.Background(), models.Advisory{
+		ClusterName: "dev", Namespace: "payments", ResourceKind: "Pod", ResourceName: "pay-1",
+	})
+	req3 := httptest.NewRequest(http.MethodGet, "/api/v1/advisories?namespace=payments", nil)
+	rec3 := httptest.NewRecorder()
+	srv.Handler().ServeHTTP(rec3, req3)
+	if rec3.Code != http.StatusOK {
+		t.Fatalf("expected 200 on /api/v1/advisories, got %d", rec3.Code)
+	}
+	var listResp struct {
+		Advisories []models.Advisory `json:"advisories"`
+	}
+	if err := json.Unmarshal(rec3.Body.Bytes(), &listResp); err != nil {
+		t.Fatalf("failed to decode advisories: %v", err)
+	}
+	if len(listResp.Advisories) != 1 || listResp.Advisories[0].Namespace != "payments" {
+		t.Fatalf("expected 1 filtered advisory in payments, got %+v", listResp.Advisories)
+	}
 }

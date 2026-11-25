@@ -63,10 +63,30 @@ func (s *Server) handleListAdvisories(w http.ResponseWriter, r *http.Request) {
 			limit = n
 		}
 	}
+	namespace := r.URL.Query().Get("namespace")
+	cluster := r.URL.Query().Get("cluster")
+
 	advisories, err := s.store.ListAdvisories(r.Context(), limit)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
+	}
+
+	if namespace != "" || cluster != "" {
+		filtered := make([]models.Advisory, 0, len(advisories))
+		for _, a := range advisories {
+			if namespace != "" && a.Namespace != namespace {
+				continue
+			}
+			if cluster != "" && a.ClusterName != cluster {
+				continue
+			}
+			filtered = append(filtered, a)
+		}
+		advisories = filtered
+	}
+	if advisories == nil {
+		advisories = []models.Advisory{}
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"advisories": advisories})
 }
